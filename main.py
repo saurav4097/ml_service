@@ -2,7 +2,15 @@ from fastapi import FastAPI, UploadFile, File, HTTPException
 from PIL import Image
 from predict import predict_image
 import io
-
+from fastapi.middleware.cors import CORSMiddleware
+app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # ⚠️ Allow all for testing; later replace "*" with your frontend URL
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 app = FastAPI()
 
 @app.post("/predict")
