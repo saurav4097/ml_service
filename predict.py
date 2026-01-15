@@ -14,7 +14,7 @@ LABELS = [
     "Attitude"
 ]
 
-def humanize_score(x: torch.Tensor, min_out=50, max_out=95, gamma=0.55):
+def humanize_score(x: torch.Tensor, min_out=70, max_out=99, gamma=0.55):
     """
     Converts CLIP relative score → human-friendly percentage
     - Ensures minimum confidence (>=50)
@@ -28,10 +28,6 @@ def humanize_score(x: torch.Tensor, min_out=50, max_out=95, gamma=0.55):
 def predict_image(image: Image.Image):
     if image is None:
         raise ValueError("Invalid image")
-    
-    # Ensure model runs on CPU (safe for Railway / free hosting)
-    device = torch.device("cpu")
-    model.to(device)
 
     # CLIP input
     inputs = processor(
@@ -40,9 +36,6 @@ def predict_image(image: Image.Image):
         return_tensors="pt",
         padding=True
     )
-
-  # Move tensors to CPU
-    inputs = {k: v.to(device) for k, v in inputs.items()}
 
     with torch.no_grad():
         outputs = model(**inputs)
@@ -57,13 +50,13 @@ def predict_image(image: Image.Image):
     scores = {}
 
     for i, label in enumerate(LABELS):
-        base_score = humanize_score(normalized[i])
+        base = humanize_score(normalized[i])
 
-        # 🎯 tiny randomness → natural look
+        # 🎯 Very small jitter → looks natural, not fake
         jitter = random.uniform(-2.0, 2.0)
-        final_score = torch.clamp(base_score + jitter, 50.0, 95.0)
+        final = torch.clamp(base + jitter, 70.0, 99.0)
 
-        scores[label] = round(float(final_score), 1)
+        scores[label] = round(float(final), 1)
 
     return {
         "scores": scores
